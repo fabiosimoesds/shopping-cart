@@ -1,31 +1,33 @@
+import shop from "../../api/shop"
+
 export default {
   state: { // = data
-    cart: [],
+    items: [],
     checkoutStatus: null
   },
 
   getters: {// = computed properties
 
-      cartProducts (state) {
-        return state.cart.map(cartItem => {
-          const product = state.products.find(product => product.id === cartItem.id)
-          return {
-            title: product.title,
-            price: product.price,
-            quantity: cartItem.quantity
-          }
-        })
-      },
+    cartProducts (state, getters, rootState) {
+      return state.items.map(cartItem => {
+        const product = rootState.products.items.find(product => product.id === cartItem.id)
+        return {
+          title: product.title,
+          price: product.price,
+          quantity: cartItem.quantity
+        }
+      })
+    },
 
-      cartTotal (state, getters) {
-        return getters.cartProducts.reduce((total, product) => total + product.price * product.quantity, 0)
-      }
+    cartTotal (state, getters) {
+      return getters.cartProducts.reduce((total, product) => total + product.price * product.quantity, 0)
+    }
   },
 
   actions: {
     checkout ({state, commit}) {
       shop.buyProducts(
-        state.cart,
+        state.items,
         () => {
           commit('emptyCart')
           commit('setCheckoutStatus', 'success')
@@ -38,6 +40,18 @@ export default {
   
     showStatus(context) {
       context.commit('getStatus')
+    },
+
+    addProductToCart ({commit, getters, state, rootState}, product){
+      if (getters.productIsInStock(product)) {
+        const cartItem = state.items.find(item => item.id === product.id)
+        if (!cartItem) {
+          commit('pushProductToCart', product.id)
+        }else {
+          commit('incrementItemQuantity', cartItem)
+        }
+        commit('decrementProductInventory', product)
+      }
     }
   },
 // it can be very tempting to set states in action, but you shoudn't it goes agains the idea of centralized store
@@ -45,7 +59,7 @@ export default {
   mutations: {// = responsible for setting and updating the state 
     pushProductToCart (state, productId) {
       console.log('different item')
-      state.cart.push({
+      state.items.push({
         id: productId,
         quantity: 1
       })
@@ -58,7 +72,7 @@ export default {
     },
 
     emptyCart (state) {
-      state.cart = []
+      state.items = []
     },
 
     setCheckoutStatus (state, status) {

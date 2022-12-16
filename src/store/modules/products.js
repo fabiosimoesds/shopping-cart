@@ -1,11 +1,13 @@
+import shop from "../../api/shop"
+
 export default {
   state: { // = data
-    products: []
+    items: []
   },
 
   getters: {// = computed properties
     availableProducts (state, getters) {
-      return state.products.filter(product => product.inventory > 0)
+      return state.items.filter(product => product.inventory > 0)
     },
 
     productIsInStock() {
@@ -31,7 +33,7 @@ export default {
   mutations: {// = responsible for setting and updating the state 
     setProducts (state, products) {
 
-      state.products = products
+      state.items = products
 
     },
 
